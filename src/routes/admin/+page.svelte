@@ -61,7 +61,7 @@
 		border-radius: 5px;
 		padding: 0.3em 0.5em;
 		margin: 0.2em;
-		opacity: 0.5;
+		color: #0008;
 		transition: 0.3s;
 	}
 
@@ -69,7 +69,7 @@
 	button:hover {
 		cursor: pointer;
 		background: #ffd071;
-		opacity: 1;
+		color: #000;
 		box-shadow: 0 0 5px #c9ae78;
 	}
 

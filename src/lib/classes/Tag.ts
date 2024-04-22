@@ -56,11 +56,15 @@ export class Tag {
 		return tags.map((tag) => Tag.toObjectOption(tag));
 	}
 
-	public static fromObjectOption(option: ObjectOption): Tag {
-		return new Tag(option.value as number, option.label as string);
+	public static fromObjectOption(option: ObjectOption | string): Tag {
+		if (typeof option === 'string') {
+			return new Tag(null, option);
+		} else {
+			return new Tag(option.value as number, option.label as string);
+		}
 	}
 
-	public static fromObjectOptionArray(options: ObjectOption[]): Tag[] {
+	public static fromObjectOptionArray(options: (ObjectOption | string)[]): Tag[] {
 		return options.map((option) => Tag.fromObjectOption(option));
 	}
 }

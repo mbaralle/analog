@@ -62,7 +62,8 @@ export function updatePhoto(photo: Photo): number {
 	).join(',');
 	db.prepare('DELETE FROM photo_tag WHERE photo_id = ? AND tag_id NOT IN (?)').run(photoId, tagsId);
 
-	photo.getTags().forEach((tag) => linkTag(photoId, tag.getId() || createTag(tag)));
+	linkTags(photoId, photo.getTags());
+	deleteUnusedTags();
 	return photoId;
 }
 
@@ -72,13 +73,14 @@ export function createPhoto(photo: Photo): number {
 		.run(photo.getUrl(), photo.getCaption(), photo.getAlt(), photo.getDate().valueOf())
 		.lastInsertRowid as number;
 
-	photo.getTags().forEach((tag) => linkTag(photoId, tag.getId() || createTag(tag)));
+	linkTags(photoId, photo.getTags());
 
 	return photoId;
 }
 
 export function deletePhoto(id: number): RunResult {
 	db.prepare('DELETE FROM photo_tag WHERE photo_id = ?').run(id);
+	deleteUnusedTags();
 	return db.prepare('DELETE FROM photo WHERE id = ?').run(id);
 }
 
@@ -89,14 +91,18 @@ export function getTags(): Tag[] {
 		.map((obj) => parseTag(obj as RESPONSE_TAG));
 }
 
-export function createTag(tag: Tag): number {
+function createTag(tag: Tag): number {
 	return db.prepare('INSERT INTO tag (tag) VALUES (?)').run(tag.getTag()).lastInsertRowid as number;
 }
 
-export function linkTag(photo: number, tag: number): RunResult {
+function linkTag(photo: number, tag: number): RunResult {
 	return db.prepare('INSERT INTO photo_tag (photo_id, tag_id) VALUES (?, ?)').run(photo, tag);
 }
 
-export function unlinkTag(photo: number, tag: number): RunResult {
-	return db.prepare('DELETE FROM photo_tag WHERE photo_id = ? AND tag_id = ?').run(photo, tag);
+function linkTags(photo: number, tags: Tag[]): void {
+	return tags.forEach((tag) => linkTag(photo, tag.getId() || createTag(tag)));
+}
+
+function deleteUnusedTags() {
+	db.prepare('DELETE FROM tag WHERE id NOT IN (SELECT tag_id FROM photo_tag)').run();
 }

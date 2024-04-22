@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+
+		<meta name="description" content="One frame at a time 📷" />
+		<title>mbaralle analog</title>
+
+		<link rel="shortcut icon" type="image/png" href="/favicon.png" />
+
+		<link rel="stylesheet" type="text/css" href="/style.css" />
+
+		<link
+			rel="stylesheet"
+			type="text/css"
+			href="https://fonts.googleapis.com/css?family=Karla:400,400italic,700,700italic"
+		/>
+
+		<style>
+			a.nav-item, /*Navigation*/
+			a.a-link, /*Back button*/
+			.caption a, /*PhotoComponent*/
+			.post__footer a /*PhotoComponent*/ {
+				color: #000;
+				opacity: 0.5;
+			}
+
+			a.nav-item:hover,
+			a.a-link:hover,
+			.caption a:hover,
+			.post__footer a:hover {
+				opacity: 1;
+			}
+		</style>
+
+		%sveltekit.head%
+	</head>
+	<body>
+		%sveltekit.body%
+	</body>
+</html>

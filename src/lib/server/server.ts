@@ -1,11 +1,12 @@
 import Database, { type RunResult } from 'better-sqlite3';
 
+import { DATABASE_PATH } from '$env/static/private';
 import { Photo, Tag } from '$lib/classes';
 
 import { parsePhoto, parseTag, type RESPONSE_PHOTO, type RESPONSE_TAG } from './mapper';
 
 const options = {};
-const db = new Database('./data.db', options);
+const db = new Database(DATABASE_PATH, options);
 
 initTables();
 

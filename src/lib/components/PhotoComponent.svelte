@@ -64,6 +64,7 @@
 	}
 
 	img {
+		border-radius: 5px;
 		transition: 0.3s;
 	}
 	img:hover {

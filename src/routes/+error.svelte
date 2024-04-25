@@ -1,10 +1,10 @@
 <script>
 	import { page } from '$app/stores';
-	import { title } from '$lib/stores';
+	import { pageTitle } from '$lib/stores';
 </script>
 
 <svelte:head>
-	<title>{$page.error?.message} - {$title}</title>
+	<title>{$page.error?.message} - {$pageTitle}</title>
 </svelte:head>
 
 <div id="error">

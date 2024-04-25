@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { description, title } from '$lib/stores';
+	import { description, subtitle, title } from '$lib/stores';
 </script>
 
 <header>
@@ -7,18 +7,15 @@
 		<img class="avatar" src="/img/logo.jpg" alt={$title} />
 	</div>
 
-	<h1 class="head-title"><a href="/" title={$title}>{$title}</a></h1>
+	<h1><a href="/" title={$title}>{$title}</a></h1>
+	<h2>{$subtitle}</h2>
 
 	<p class="header-desc">{$description}</p>
 </header>
 
 <style>
-	.head-title {
-		margin: 30px 0 0 0;
-	}
-
-	.head-title > a {
-		opacity: 1;
+	header {
+		text-align: center;
 	}
 
 	.avatar {
@@ -28,20 +25,29 @@
 		border-radius: 50%;
 	}
 
-	h1.head-title a {
+	h1,
+	h2 {
+		font-family: 'Montserrat Alternates', sans-serif;
+		font-weight: 600;
+		font-style: normal;
+	}
+
+	h1 {
+		margin-top: 30px;
+	}
+
+	h1 > a {
+		margin-top: 30px;
+		opacity: 1;
 		font-size: 24px;
 	}
 
-	.head-title,
-	.header-avatar,
-	.header-desc {
-		width: 100%;
-		text-align: center;
+	h1 > a:hover {
+		opacity: 0.5;
 	}
 
-	.head-title,
-	.header-avatar,
-	.header-desc {
-		position: relative;
+	h2 {
+		font-size: 16px;
+		font-weight: 400;
 	}
 </style>

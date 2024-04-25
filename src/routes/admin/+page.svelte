@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { title } from '$lib/stores';
+	import { pageTitle } from '$lib/stores';
 	import { type Photo } from '$lib/types';
 	import { formatDate, formatTime } from '$lib/utils';
 
@@ -7,7 +7,7 @@
 </script>
 
 <svelte:head>
-	<title>Admin - {$title}</title>
+	<title>Admin - {$pageTitle}</title>
 </svelte:head>
 
 <h2>Admin</h2>
@@ -101,6 +101,7 @@
 	}
 
 	table img {
+		border-radius: 5px;
 		max-width: 100px;
 		max-height: 100px;
 	}

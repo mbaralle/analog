@@ -6,7 +6,7 @@
 	import BackButton from './BackButton.svelte';
 	import Copyright from './Copyright.svelte';
 	import Header from './Header.svelte';
-	import Navigation from './Navigation.svelte';
+	// import Navigation from './Navigation.svelte';
 
 	let loading: boolean = true;
 
@@ -31,7 +31,7 @@
 		<BackButton />
 	{:else}
 		<Header />
-		<Navigation />
+		<!-- <Navigation /> -->
 	{/if}
 	<slot />
 	<Copyright />

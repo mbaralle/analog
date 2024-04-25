@@ -8,7 +8,12 @@
 	.back-button-wrapper {
 		font-size: 21px;
 		position: absolute;
-		top: 25px;
+		top: -15px;
 		left: 25px;
+	}
+
+	.back_button {
+		margin: -15px;
+		padding: 15px;
 	}
 </style>

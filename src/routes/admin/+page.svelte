@@ -13,7 +13,7 @@
 <h2>Admin</h2>
 <div class="admin-nav">
 	<a href="/admin/create" title="Add Photo">Add Photo</a>
-	<a href="/auth/logout" title="Logout">Logout</a>
+	<form method="POST" action="/auth/logout"><button title="Logout">Logout</button></form>
 </div>
 <table>
 	<tr>
@@ -52,6 +52,9 @@
 	.admin-nav {
 		text-align: center;
 		margin: 1em;
+	}
+	.admin-nav form {
+		display: inline;
 	}
 
 	a,

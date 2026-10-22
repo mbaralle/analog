@@ -9,8 +9,9 @@
 	export let colWidth = 'minmax(Min(20em, 100%), 1fr)';
 	export let items: Photo[] = [];
 
-	let grids = [];
-	let masonryElement;
+	type Grid = { _el: HTMLElement; gap: number; items: HTMLElement[]; ncol: number; mod: number };
+	let grids: Grid[] = [];
+	let masonryElement: HTMLDivElement;
 
 	const refreshLayout = async () => {
 		grids.forEach(async (grid) => {
@@ -20,8 +21,8 @@
 			grid.items.forEach((c) => {
 				let new_h = c.getBoundingClientRect().height;
 
-				if (new_h !== +c.dataset.h) {
-					c.dataset.h = new_h;
+				if (new_h !== Number(c.dataset.h)) {
+					c.dataset.h = String(new_h);
 					grid.mod++;
 				}
 			});
@@ -48,15 +49,16 @@
 		});
 	};
 
-	const calcGrid = async (_masonryArr) => {
+	const calcGrid = async (_masonryArr: HTMLElement[]) => {
 		await tick();
 		if (_masonryArr.length && getComputedStyle(_masonryArr[0]).gridTemplateRows !== 'masonry') {
 			grids = _masonryArr.map((grid) => {
 				return {
 					_el: grid,
 					gap: parseFloat(getComputedStyle(grid).gridRowGap),
-					items: [...grid.childNodes].filter(
-						(c) => c.nodeType === 1 && +getComputedStyle(c).gridColumnEnd !== -1
+					items: [...grid.children].filter(
+						(c): c is HTMLElement =>
+							c instanceof HTMLElement && +getComputedStyle(c).gridColumnEnd !== -1
 					),
 					ncol: 0,
 					mod: 0
@@ -66,7 +68,7 @@
 		}
 	};
 
-	let _window;
+	let _window: Window | undefined;
 	onMount(() => {
 		_window = window;
 		_window.addEventListener('resize', refreshLayout, false); /* on resize */

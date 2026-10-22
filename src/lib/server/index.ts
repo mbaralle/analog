@@ -1,4 +1,4 @@
-import { auth, checkAuth } from './auth';
+import { checkAuth, SESSION_COOKIE } from './auth';
 import {
 	createPhoto,
 	deletePhoto,
@@ -10,7 +10,6 @@ import {
 } from './server';
 
 export {
-	auth,
 	checkAuth,
 	createPhoto,
 	deletePhoto,
@@ -18,5 +17,6 @@ export {
 	getPhotos,
 	getTagged,
 	getTags,
+	SESSION_COOKIE,
 	updatePhoto
 };

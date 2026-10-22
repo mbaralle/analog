@@ -1,0 +1,52 @@
+name: Production container
+on:
+  push:
+    branches: [caprover]
+  pull_request:
+jobs:
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: npm run test:runtime
+      - run: docker build -t analog:test .
+      - name: Check non-root runtime, SQLite writes and persistence
+        run: |
+          docker volume create analog-test-data
+          docker run -d --name analog-test -p 127.0.0.1:3000:3000 \
+            -v analog-test-data:/data \
+            -e ORIGIN=https://analog.example \
+            -e CLIENT_ID=test-client -e CLIENT_SECRET=test-secret \
+            -e AUTHORIZED_USER=owner analog:test
+          for i in $(seq 1 30); do
+            if curl --fail http://127.0.0.1:3000/health; then break; fi
+            sleep 1
+          done
+          curl --fail http://127.0.0.1:3000/health
+          curl --fail http://127.0.0.1:3000/
+          test "$(docker exec analog-test id -u)" = 1000
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/admin)" = 403
+          test "$(curl -s -o /dev/null -w '%{http_code}' 'http://127.0.0.1:3000/auth/callback?state=forged&code=forged')" = 400
+          curl -sD /tmp/oauth-headers -o /dev/null http://127.0.0.1:3000/auth/login
+          grep -i 'set-cookie: analog_oauth_state=.*HttpOnly.*Secure.*SameSite=Lax' /tmp/oauth-headers
+          grep -i 'location: https://github.com/login/oauth/authorize?' /tmp/oauth-headers
+          docker exec analog-test node --input-type=module -e "import Database from 'better-sqlite3'; const db = new Database('/data/data.db'); db.prepare('INSERT INTO tag (tag) VALUES (?)').run('persistence-test'); db.close();"
+          docker rm -f analog-test
+          docker run --rm -v analog-test-data:/data --entrypoint node analog:test \
+            --input-type=module -e "import Database from 'better-sqlite3'; const db = new Database('/data/data.db'); if (!db.prepare('SELECT id FROM tag WHERE tag = ?').get('persistence-test')) process.exit(1); db.close();"
+          docker run --rm -v analog-test-data:/data --entrypoint node analog:test \
+            --input-type=module -e "import Database from 'better-sqlite3'; const db = new Database('/data/data.db'); await db.backup('/data/backup.db'); db.close();"
+          docker run --rm --user 0:0 -v analog-test-data:/data --entrypoint node analog:test \
+            scripts/import-database.mjs /data/backup.db
+          docker run --rm -v analog-test-data:/data --entrypoint node analog:test \
+            --input-type=module -e "import Database from 'better-sqlite3'; const db = new Database('/data/data.db'); if (!db.prepare('SELECT id FROM tag WHERE tag = ?').get('persistence-test')) process.exit(1); db.prepare('INSERT INTO tag (tag) VALUES (?)').run('after-import'); db.close();"
+      - name: Container diagnostics
+        if: failure()
+        run: docker logs analog-test || true

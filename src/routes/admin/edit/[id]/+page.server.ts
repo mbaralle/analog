@@ -2,11 +2,11 @@ import { error, redirect } from '@sveltejs/kit';
 import type { ObjectOption } from 'svelte-multiselect';
 
 import { Photo, Tag } from '$lib/classes';
-import { checkAuth, getPhoto, getTags, updatePhoto } from '$lib/server';
+import { checkAuth, getPhoto, getTags, SESSION_COOKIE, updatePhoto } from '$lib/server';
 import { formatDateFromInput } from '$lib/utils';
 
 export async function load({ params, cookies }) {
-	checkAuth(cookies.get('accessToken'));
+	checkAuth(cookies.get(SESSION_COOKIE));
 	const photo: Photo | null = await getPhoto(+params?.id);
 
 	if (!photo) {
@@ -24,7 +24,7 @@ export async function load({ params, cookies }) {
 
 export const actions = {
 	edit: async ({ request, cookies }) => {
-		checkAuth(cookies.get('accessToken'));
+		checkAuth(cookies.get(SESSION_COOKIE));
 		const data = await request.formData();
 		const id = data.get('id');
 

@@ -1,10 +1,13 @@
 import { redirect } from '@sveltejs/kit';
 
-import { auth } from '$lib/server';
+import { deleteSession, SESSION_COOKIE } from '$lib/server/auth';
 
-export async function GET({ cookies }) {
-	auth.set(null);
+import type { RequestHandler } from './$types';
+
+export const POST: RequestHandler = ({ cookies }) => {
+	deleteSession(cookies.get(SESSION_COOKIE));
+	cookies.delete(SESSION_COOKIE, { path: '/' });
 	cookies.delete('login', { path: '/' });
 	cookies.delete('accessToken', { path: '/' });
-	return redirect(302, '/');
-}
+	redirect(303, '/');
+};

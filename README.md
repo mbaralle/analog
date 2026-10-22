@@ -1,38 +1,36 @@
-# create-svelte
+# Analog
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/main/packages/create-svelte).
+A SvelteKit photo journal with a SQLite database and GitHub OAuth for admin access.
 
-## Creating a project
+## Development
 
-If you're seeing this, you've probably already done this step. Congrats!
+Use Node.js 22. Copy `.env.example` to `.env`, fill in the GitHub OAuth app
+credentials and authorized GitHub login, and set `DATABASE_PATH=./data.db`.
+For local OAuth, register `http://localhost:5173/auth/callback`.
 
-```bash
-# create a new project in the current directory
-npm create svelte@latest
-
-# create a new project in my-app
-npm create svelte@latest my-app
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```bash
+```sh
+npm ci
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
 
-## Building
-
-To create a production version of your app:
-
-```bash
+```sh
+npm run check
+npm test
 npm run build
+npm run test:runtime
 ```
 
-You can preview the production build with `npm run preview`.
+For a standalone build, supply runtime environment variables and run `npm start`.
+Unlike Vite development, adapter-node does not automatically load `.env`; with
+Node.js 22 you can use `node --env-file=.env build`. Set `ORIGIN` to the URL
+actually serving the production build. Production cookies require HTTPS.
 
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+## CapRover
+
+The Docker image runs as UID/GID 1000, listens on port 3000, and stores SQLite at
+`/data/data.db`. Mount a persistent volume at `/data` and use one replica.
+Configure `CLIENT_ID`, `CLIENT_SECRET`, `AUTHORIZED_USER`, `DATABASE_PATH` and
+`ORIGIN` at runtime. Builds require neither secrets nor a database.
+
+Follow the [deployment, rehearsal, final cutover and rollback guide](docs/caprover.md)
+for `analog.ankylosaurus.mbaralle.dev` and `analog.mbaralle.dev`.

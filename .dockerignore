@@ -1,0 +1,17 @@
+.git
+.agents
+.codex
+node_modules
+.svelte-kit
+build
+.env
+.env.*
+*.db*
+*.sqlite*
+*.bak
+backups
+.npm-cache
+coverage
+tests
+docs
+README.md

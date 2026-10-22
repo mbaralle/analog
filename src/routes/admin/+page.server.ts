@@ -1,16 +1,16 @@
 import { error, redirect } from '@sveltejs/kit';
 
-import { checkAuth, deletePhoto, getPhotos } from '$lib/server';
+import { checkAuth, deletePhoto, getPhotos, SESSION_COOKIE } from '$lib/server';
 
 export async function load({ cookies }) {
-	checkAuth(cookies.get('accessToken'));
+	checkAuth(cookies.get(SESSION_COOKIE));
 	const photos = await getPhotos();
 	return { photos: photos.map((photo) => photo.toJson()) };
 }
 
 export const actions = {
 	edit: async ({ request, cookies }) => {
-		checkAuth(cookies.get('accessToken'));
+		checkAuth(cookies.get(SESSION_COOKIE));
 		const data = await request.formData();
 		const id = data.get('id');
 
@@ -23,7 +23,7 @@ export const actions = {
 		redirect(303, `/admin/edit/${id}`);
 	},
 	delete: async ({ request, cookies }) => {
-		checkAuth(cookies.get('accessToken'));
+		checkAuth(cookies.get(SESSION_COOKIE));
 		const data = await request.formData();
 		const id = data.get('id');
 

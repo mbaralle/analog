@@ -1,49 +1,70 @@
 import { error, redirect } from '@sveltejs/kit';
 
-import { AUTHORIZED_USER, VITE_CLIENT_ID, VITE_CLIENT_SECRET } from '$env/static/private';
-import { auth } from '$lib/server';
+import {
+	cookieOptions,
+	createSession,
+	deleteSession,
+	SESSION_COOKIE,
+	SESSION_MAX_AGE,
+	STATE_COOKIE,
+	VERIFIER_COOKIE
+} from '$lib/server/auth';
+import { requireEnv } from '$lib/server/config';
 
-const tokenURL = 'https://github.com/login/oauth/access_token';
-const userURL = 'https://api.github.com/user';
+import type { RequestHandler } from './$types';
 
-export async function GET({ url: { searchParams }, cookies }) {
-	const code = searchParams.get('code') || '';
-	const accessToken = await getAccessToken(code);
-	const user = await getUser(accessToken);
-
-	const login: string = user.login;
-
-	if (login === AUTHORIZED_USER) {
-		auth.set({ login, accessToken });
-		cookies.set('login', login, { path: '/' });
-		cookies.set('accessToken', accessToken, { path: '/' });
-		return redirect(302, '/admin');
-	} else if (login !== undefined) {
-		return error(401, `Unauthorized user (${login})`);
-	} else {
-		return error(403, 'Bad credentials');
+export const GET: RequestHandler = async ({ url, cookies, fetch }) => {
+	const state = cookies.get(STATE_COOKIE);
+	const verifier = cookies.get(VERIFIER_COOKIE);
+	cookies.delete(STATE_COOKIE, { path: '/auth/callback' });
+	cookies.delete(VERIFIER_COOKIE, { path: '/auth/callback' });
+	if (!state || state !== url.searchParams.get('state') || !verifier) {
+		error(400, 'Invalid OAuth state. Please start login again.');
 	}
-}
+	const code = url.searchParams.get('code');
+	if (url.searchParams.has('error') || !code) error(400, 'GitHub authorization was not completed.');
+	const clientId = requireEnv('CLIENT_ID');
+	const clientSecret = requireEnv('CLIENT_SECRET');
+	const authorizedUser = requireEnv('AUTHORIZED_USER');
 
-function getAccessToken(code: string) {
-	return fetch(tokenURL, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-		body: JSON.stringify({
-			client_id: VITE_CLIENT_ID,
-			client_secret: VITE_CLIENT_SECRET,
-			code
-		})
-	})
-		.then((r) => r.json())
-		.then((r) => r.access_token);
-}
+	let login: string;
+	try {
+		const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+			body: JSON.stringify({
+				client_id: clientId,
+				client_secret: clientSecret,
+				code,
+				redirect_uri: new URL('/auth/callback', url).href,
+				code_verifier: verifier
+			}),
+			signal: AbortSignal.timeout(10000)
+		});
+		if (!tokenResponse.ok) throw new Error('Token exchange failed');
+		const token = await tokenResponse.json();
+		if (typeof token.access_token !== 'string' || !token.access_token)
+			throw new Error('No access token');
+		const userResponse = await fetch('https://api.github.com/user', {
+			headers: {
+				Accept: 'application/vnd.github+json',
+				Authorization: `Bearer ${token.access_token}`
+			},
+			signal: AbortSignal.timeout(10000)
+		});
+		if (!userResponse.ok) throw new Error('Identity lookup failed');
+		const user = await userResponse.json();
+		if (typeof user.login !== 'string' || !user.login) throw new Error('No GitHub login');
+		login = user.login;
+	} catch {
+		error(502, 'GitHub authentication failed. Please start login again.');
+	}
+	if (login.toLowerCase() !== authorizedUser.toLowerCase()) error(403, 'Unauthorized GitHub user');
 
-function getUser(accessToken: string) {
-	return fetch(userURL, {
-		headers: {
-			Accept: 'application/json',
-			Authorization: `Bearer ${accessToken}`
-		}
-	}).then((r) => r.json());
-}
+	deleteSession(cookies.get(SESSION_COOKIE));
+	cookies.set(SESSION_COOKIE, createSession(login), { ...cookieOptions, maxAge: SESSION_MAX_AGE });
+	// Expire cookies from the previous authentication implementation.
+	cookies.delete('login', { path: '/' });
+	cookies.delete('accessToken', { path: '/' });
+	redirect(302, '/admin');
+};
